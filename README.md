@@ -15,7 +15,7 @@ Details:
 
 Your code should be able to do at least the following:
 1. Create a separate git branch to represent the new release.
-2. Make sure the release file (release.plist) reflects the new release.
+2. Make sure the release file (release.plist) reflects the next release.
 3. Generate a feature flag report (text file is fine) to see what feature flags have changed since the last release.
 
 Requirements:
