@@ -15,6 +15,78 @@
 # Once you finish, create a Pull Request against master of this repo
 #
 # cmdline options
-# 1) deploytool newbranch
+# 1) deploytool newbranch => creates branch 'new-release'
 # 2) Update release.plist deploytool bump # increment release.plist to next version
 # 3) Generate feature flag report, to tell which FF's changed since last rel.
+
+# PyGithub for talking to GithubAPI; pip install PyGithub
+# Click for creating cmdline tools ; pip install click
+
+# Pull in the commandline tool lib
+# import click
+from github import Github
+import csv
+
+
+###########################################################
+# Create commandline functionality using click
+###########################################################
+# @click.option('--')
+
+
+
+
+###########################################################
+# Use CSV lib to create arrays of the files
+###########################################################
+# Load the CSV's into arrays
+# Open the feature flag CSV
+# ff = open("../featureflags/FF.csv")
+# csv_ff = csv.reader(ff)
+#
+# # Open the release info csv_f
+# rif = open("../releng/release_info.csv")
+# csv_rif = csv.reader(rif)
+
+rls_name = []
+rls_ver = []
+
+# Load into array using csv's DictReader function
+for cell in csv.DictReader(open('../releng/release_info.csv')):
+    rls_name.append(cell['rls_name'])
+    rls_ver.append(cell['rls_ver'])
+
+print("release names = ", rls_name)
+
+# We'd do something similiar with FF.csv to read in, then modify
+
+
+###########################################################
+# Use pyGithub to create branch
+###########################################################
+
+# Use an access token for github access. This token would be abstracted
+# out/git ignored somehow if it was in prod.
+git = Github("ACCESS TOKEN")
+# Definre repo name
+repoName = "br-code-exercise-82044407"
+source_branch = 'master'
+
+# Create new release branch name from rel version
+# # Create the name of the rel branch
+target_branch = 'release_' + rls_name[2] + '.' + rls_ver[1]
+
+repo = git.get_user().get_repo(repoName)
+sb = repo.get_branch(source_branch)
+repo.create_git_ref(ref='refs/heads/' + target_branch, sha=sb.commit.sha)
+
+###########################################################
+# Update release.plist
+###########################################################
+
+# Find location of the ver number after line CFBundleShortVersionString
+# Replace it
+#
+# with fileinput.FileInput('../release.plist', inplace=True, backup='.bak') as file:
+#     for line in file:
+        # print(line.replace(text_to_search, replacement_text), end='')
