@@ -20,20 +20,14 @@
 # 3) Generate feature flag report, to tell which FF's changed since last rel.
 
 # PyGithub for talking to GithubAPI; pip install PyGithub
-# Click for creating cmdline tools ; pip install click
 
-# Pull in the commandline tool lib
-# import click
 from github import Github
 import csv
 
 
 ###########################################################
-# Create commandline functionality using click
+# Create commandline functionality using argparse
 ###########################################################
-# @click.option('--')
-
-
 
 
 ###########################################################
@@ -56,7 +50,8 @@ for cell in csv.DictReader(open('../releng/release_info.csv')):
     rls_name.append(cell['rls_name'])
     rls_ver.append(cell['rls_ver'])
 
-print("release names = ", rls_name)
+print("release names = {}".format(rls_name))
+print("Release versions = {}".format(rls_ver))
 
 # We'd do something similiar with FF.csv to read in, then modify
 
@@ -65,18 +60,23 @@ print("release names = ", rls_name)
 # Use pyGithub to create branch
 ###########################################################
 
-# Use an access token for github access. This token would be abstracted
-# out/git ignored somehow if it was in prod.
-git = Github("ACCESS TOKEN")
-# Definre repo name
-repoName = "br-code-exercise-82044407"
+# Open and read the token
+tokey = open('auth_token').read()
+
+# Use an access token for github access. Use rstrip to rip off the white space and \n
+gitobj = Github(tokey.rstrip())
+
+# Currently a permissions issue creating a branch in the slack repo,
+# So i'm testing pointing at one of my current repos 
+# repoName = "br-code-exercise-82044407"
+repoName = "lpic101"
 source_branch = 'master'
 
 # Create new release branch name from rel version
 # # Create the name of the rel branch
 target_branch = 'release_' + rls_name[2] + '.' + rls_ver[1]
 
-repo = git.get_user().get_repo(repoName)
+repo = gitobj.get_user().get_repo(repoName)
 sb = repo.get_branch(source_branch)
 repo.create_git_ref(ref='refs/heads/' + target_branch, sha=sb.commit.sha)
 
