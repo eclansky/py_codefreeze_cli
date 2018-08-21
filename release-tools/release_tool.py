@@ -28,7 +28,7 @@ from github import Github
 import csv
 import argparse
 import sys
-
+import plistlib
 
 ###########################################################
 # Use CSV lib to create arrays of the files
@@ -69,8 +69,10 @@ source_branch = 'master'
 # Create target_branch name from rel version
 # This should print out the values based on whats in hash, not hardcoded.
 
-# Build target branch name using argv[1] and corresponding dict value
-target_branch = 'release_' + sys.argv[1] + releases[sys.argv[1]]
+# IF argument exists, Build target branch name
+if len(sys.argv) > 1:
+    if sys.argv[1] in releases:
+        target_branch = 'release_' + sys.argv[1] + releases[sys.argv[1]]
 
 repo = gitobj.get_user().get_repo(repoName)
 sb = repo.get_branch(source_branch)
@@ -84,17 +86,15 @@ parser = argparse.ArgumentParser()
 # Create an argument that ideally takes in the input and releases correct version
 parser.add_argument("version", help="Version to release? ")
 args = parser.parse_args()
+
 if args.version == 'Apple':
     repo.create_git_ref(ref='refs/heads/' + target_branch, sha=sb.commit.sha)
     print("Releasing build {} to new branch".format(target_branch))
 elif args.version == 'Cake':
     repo.create_git_ref(ref='refs/heads/' + target_branch, sha=sb.commit.sha)
     print("Releasing build {} to new branch".format(target_branch))
-#elif args.version not matching in hash
-#    print("You must enter one of the following versions to deploy: Apple, Cake")
-
-
-
+elif sys.argv[1] not in releases:
+    print("You must enter one of the following versions as an argument: Apple, Cake")
 
 
 ###########################################################
@@ -103,7 +103,13 @@ elif args.version == 'Cake':
 
 # Find location of the ver number after line CFBundleShortVersionString
 # Replace it
-#
-# with fileinput.FileInput('../release.plist', inplace=True, backup='.bak') as file:
-#     for line in file:
-        # print(line.replace(text_to_search, replacement_text), end='')
+# relstr = open('../release.plist').read()
+# insertpoint = relstr[:relstr.find("<key>CFBundleShortVersionString</key>") + 1]
+# print("Our sw version insert point is: {}".format(insertpoint))
+
+# Use plistlib to bump version
+print("Updating Plist file version to {}".format(releases[sys.argv[1]]))
+p = plistlib.readPlist('../release.plist')
+if "CFBundleShortVersionString" in p:
+    p["CFBundleShortVersionString"] = releases[sys.argv[1]]
+    plistlib.writepPlist(p, '../release.plist')
