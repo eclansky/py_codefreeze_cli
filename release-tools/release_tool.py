@@ -90,16 +90,15 @@ sb = repo.get_branch(source_branch)
 def create_branch(version, target_branch):
     print("Releasing build {} to new branch".format(target_branch))
     repo.create_git_ref(ref='refs/heads/' + target_branch, sha=sb.commit.sha)
+
 parser = argparse.ArgumentParser()
 
-# Create an argument that ideally takes in the input and releases correct version
 parser.add_argument("version", help="Version to release? ")
 args = parser.parse_args()
 
 # Was working on a way to test if branch exsisted before trying to create one.
 # showbr = repo.get_branches()
 # print("\nThe branches that exist are {}\n".format(showbr))
-
 
 # need logic to test if branch already exists.
 if args.version == 'Apple':
