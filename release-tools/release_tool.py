@@ -22,16 +22,18 @@
 # WIP
 # Bump release.plist ver using awk/sed/ or py type string tool
 # Gen FF report
+# Logic to check if branch exists, abort, (idempotent)
 
 # PyGithub for talking to GithubAPI; pip install PyGithub
 from github import Github
+from pathlib import Path
 import csv
 import argparse
 import sys
 import plistlib
 
 ###########################################################
-# Use CSV lib to create arrays of the files
+# Use CSV lib to create arrays of the files, and make releases lib
 ###########################################################
 
 rls_name = []
@@ -45,9 +47,8 @@ for cell in csv.DictReader(open('../releng/release_info.csv')):
 
 # Create dictionary out of the two arrays for later use and accessiblity.
 releases = dict(zip(rls_name, rls_ver))
-print("Here's our releases dictionary {}".format(releases))
+# print("Here's our releases dictionary {}".format(releases))
 
-# We'd do something similiar with FF.csv to read in, then modify
 
 
 ###########################################################
@@ -55,10 +56,15 @@ print("Here's our releases dictionary {}".format(releases))
 ###########################################################
 
 # Open and read the token
-tokey = open('auth_token').read()
+tokenfile = Path('auth_token')
+if tokenfile.is_file():
+    tokey = open('auth_token').read()
+    # Use an access token for github access. Use rstrip to rip off the white space and \n
+    gitobj = Github(tokey.rstrip())
+else:
+    print("\nGithub auth_token is not in the release-tools dir!! Aborting mission!\n")
+    exit()
 
-# Use an access token for github access. Use rstrip to rip off the white space and \n
-gitobj = Github(tokey.rstrip())
 
 # Currently a permissions issue creating a branch in the slack repo,
 # So i'm testing pointing at one of my current repos
@@ -66,9 +72,8 @@ gitobj = Github(tokey.rstrip())
 repoName = "lpic101"
 source_branch = 'master'
 
-# Create target_branch name from rel version
-# This should print out the values based on whats in hash, not hardcoded.
-
+# Create target_branch name from rel version using argument and corresponding value
+# in dict
 # IF argument exists, Build target branch name
 if len(sys.argv) > 1:
     if sys.argv[1] in releases:
@@ -81,35 +86,38 @@ sb = repo.get_branch(source_branch)
 ###########################################################
 # Create commandline functionality using argparse
 ###########################################################
+# Make function we can call based on CLI input
+def create_branch(version, target_branch):
+    print("Releasing build {} to new branch".format(target_branch))
+    repo.create_git_ref(ref='refs/heads/' + target_branch, sha=sb.commit.sha)
 parser = argparse.ArgumentParser()
 
 # Create an argument that ideally takes in the input and releases correct version
 parser.add_argument("version", help="Version to release? ")
 args = parser.parse_args()
 
+# Was working on a way to test if branch exsisted before trying to create one.
+# showbr = repo.get_branches()
+# print("\nThe branches that exist are {}\n".format(showbr))
+
+
+# need logic to test if branch already exists.
 if args.version == 'Apple':
-    repo.create_git_ref(ref='refs/heads/' + target_branch, sha=sb.commit.sha)
-    print("Releasing build {} to new branch".format(target_branch))
+    create_branch(sys.argv[1], target_branch)
+
 elif args.version == 'Cake':
-    repo.create_git_ref(ref='refs/heads/' + target_branch, sha=sb.commit.sha)
-    print("Releasing build {} to new branch".format(target_branch))
+    create_branch(sys.argv[1], target_branch)
+
+# Throws error if user doesnt enter one of the available arguments
 elif sys.argv[1] not in releases:
-    print("You must enter one of the following versions as an argument: Apple, Cake")
-
+    print("You must enter one of the following versions as an argument (case-sensitive): Apple, Cake")
 
 ###########################################################
-# Update release.plist
+# Update release.plist using plistlib
 ###########################################################
 
-# Find location of the ver number after line CFBundleShortVersionString
-# Replace it
-# relstr = open('../release.plist').read()
-# insertpoint = relstr[:relstr.find("<key>CFBundleShortVersionString</key>") + 1]
-# print("Our sw version insert point is: {}".format(insertpoint))
-
-# Use plistlib to bump version
-print("Updating Plist file version to {}".format(releases[sys.argv[1]]))
-p = plistlib.readPlist('../release.plist')
-if "CFBundleShortVersionString" in p:
-    p["CFBundleShortVersionString"] = releases[sys.argv[1]]
-    plistlib.writepPlist(p, '../release.plist')
+# print("Updating Plist file version to {}".format(releases[sys.argv[1]]))
+# p = plistlib.readPlist('../release.plist')
+# if "CFBundleShortVersionString" in p:
+#     p["CFBundleShortVersionString"] = releases[sys.argv[1]]
+#     plistlib.writepPlist(p, '../release.plist')

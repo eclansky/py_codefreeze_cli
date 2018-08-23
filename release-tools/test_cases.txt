@@ -1,7 +1,6 @@
 # Test cases. Use unittest
 
 1 Test that branch was created in git using PyGithub
-2
-3
-4
-5
+2 Test for valid version positional argument exists
+3 Test that positional argument exists within the releases dict
+4 Test that token file exists, exit otherwise w/error msg.
