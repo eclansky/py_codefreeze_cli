@@ -1,5 +1,5 @@
 A python CLI simulated release tool 
-An assignment I did.
+.An assignment I did.
 
 Details:
 1. All release versions and release names are defined in the file 'releng/release_info.csv'.
