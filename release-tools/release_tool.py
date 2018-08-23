@@ -69,7 +69,7 @@ else:
 # Currently a permissions issue creating a branch in the slack repo,
 # So i'm testing pointing at one of my current repos
 # repoName = "br-code-exercise-82044407"
-repoName = "lpic101"
+repoName = "py_codefreeze_cli"
 source_branch = 'master'
 
 # Create target_branch name from rel version using argument and corresponding value
